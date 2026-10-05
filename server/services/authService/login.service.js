@@ -1,4 +1,5 @@
 import User from "../../models/user.model.js";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 const Login = async (req, res) => {
@@ -20,7 +21,7 @@ const Login = async (req, res) => {
 
         if (!ExistingUser) {
             return res.status(404).json({
-                message: "User not found",
+                message: "Invalid Credentials",
                 success: false
             })
         }
@@ -33,6 +34,45 @@ const Login = async (req, res) => {
                 success: false
             })
         }
+
+        const accessToken = jwt.sign(
+            {
+                user_id: ExistingUser._id
+            },
+            process.env.ACCESS_TOKEN_SECRET,
+            {
+                expiresIn: "15m"
+            }
+        )
+
+        const refreshToken = jwt.sign(
+            {
+                user_id: ExistingUser._id
+            },
+            process.env.REFRESH_TOKEN_SECRET,
+            {
+                expiresIn: "7d"
+            }
+        )
+
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 15 * 60 * 1000
+        })
+
+        const hashedToken = await bcrypt.hash(refreshToken, 10);
+        await User.findByIdAndUpdate(ExistingUser._id, {
+            refreshToken: hashedToken
+        });
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        })
 
         return res.status(200).json({
             message: "Logged in successfully",

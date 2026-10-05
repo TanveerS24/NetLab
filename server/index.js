@@ -3,11 +3,9 @@ dotenv.config();
 import app from "./app.js";
 import connect from "./config/db.config.js";
 import Router from "./routes/index.route.js";
-import logger from "./middleware/logger.middleware.js"
 
 const PORT = process.env.PORT;
 
-app.use(logger);
 app.use("/api/v1", Router);
 
 const startServer = async () => {
