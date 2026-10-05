@@ -4,7 +4,7 @@ const Profile = async (req, res) => {
     try {
         const id = req.user.user_id;
 
-        const user = await User.findById(id);
+        const user = await User.findById(id).select("username email isVerified");
 
         return res.status(200).json({
             message: "Profile fetched successfully",
