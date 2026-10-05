@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
-import bcrypt from "bcrypt";
+import crypto from "crypto";
 import app from "../../server/app.js";
 import User from "../../server/models/user.model.js";
 import { createTestUser, parseCookies } from "../helpers/auth.helper.js";
@@ -162,8 +162,8 @@ describe("Authentication - Login (/api/v1/auth/login)", () => {
         // Refresh token in MongoDB must NOT equal plaintext refresh token
         expect(updatedUser.refreshToken).not.toBe(plainRefreshToken);
 
-        // bcrypt comparison must succeed
-        const isMatch = await bcrypt.compare(plainRefreshToken, updatedUser.refreshToken);
-        expect(isMatch).toBe(true);
+        // SHA-256 hash comparison must match
+        const expectedHash = crypto.createHash("sha256").update(plainRefreshToken).digest("hex");
+        expect(updatedUser.refreshToken).toBe(expectedHash);
     });
 });

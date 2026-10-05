@@ -1,10 +1,14 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
-import bcrypt from "bcrypt";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import app from "../../server/app.js";
 import User from "../../server/models/user.model.js";
 import { createTestUser, generateTestRefreshToken, parseCookies } from "../helpers/auth.helper.js";
+
+function hashToken(token) {
+    return crypto.createHash("sha256").update(token).digest("hex");
+}
 
 describe("Authentication - Refresh Token (/api/v1/auth/refreshToken)", () => {
     it("should successfully generate new access token and refresh token with valid refresh token", async () => {
@@ -14,7 +18,7 @@ describe("Authentication - Refresh Token (/api/v1/auth/refreshToken)", () => {
         });
 
         const initialRefreshToken = generateTestRefreshToken(user._id);
-        const hashedInitialToken = await bcrypt.hash(initialRefreshToken, 10);
+        const hashedInitialToken = hashToken(initialRefreshToken);
         await User.findByIdAndUpdate(user._id, { refreshToken: hashedInitialToken });
 
         const res = await request(app)
@@ -37,7 +41,7 @@ describe("Authentication - Refresh Token (/api/v1/auth/refreshToken)", () => {
         });
 
         const initialRefreshToken = generateTestRefreshToken(user._id);
-        const hashedInitialToken = await bcrypt.hash(initialRefreshToken, 10);
+        const hashedInitialToken = hashToken(initialRefreshToken);
         await User.findByIdAndUpdate(user._id, { refreshToken: hashedInitialToken });
 
         const res = await request(app)
@@ -56,8 +60,8 @@ describe("Authentication - Refresh Token (/api/v1/auth/refreshToken)", () => {
         expect(updatedUser.refreshToken).not.toBe(hashedInitialToken);
         expect(updatedUser.refreshToken).not.toBe(newRefreshToken);
 
-        const isMatchNew = await bcrypt.compare(newRefreshToken, updatedUser.refreshToken);
-        expect(isMatchNew).toBe(true);
+        const expectedNewHash = hashToken(newRefreshToken);
+        expect(updatedUser.refreshToken).toBe(expectedNewHash);
     });
 
     it("should invalidate old refresh token after rotation", async () => {
@@ -67,7 +71,7 @@ describe("Authentication - Refresh Token (/api/v1/auth/refreshToken)", () => {
         });
 
         const initialRefreshToken = generateTestRefreshToken(user._id);
-        const hashedInitialToken = await bcrypt.hash(initialRefreshToken, 10);
+        const hashedInitialToken = hashToken(initialRefreshToken);
         await User.findByIdAndUpdate(user._id, { refreshToken: hashedInitialToken });
 
         // First refresh - rotates token
@@ -117,7 +121,7 @@ describe("Authentication - Refresh Token (/api/v1/auth/refreshToken)", () => {
             { expiresIn: "-1s" }
         );
 
-        const hashedExpiredToken = await bcrypt.hash(expiredRefreshToken, 10);
+        const hashedExpiredToken = hashToken(expiredRefreshToken);
         await User.findByIdAndUpdate(user._id, { refreshToken: hashedExpiredToken });
 
         const res = await request(app)
@@ -136,7 +140,7 @@ describe("Authentication - Refresh Token (/api/v1/auth/refreshToken)", () => {
         });
 
         const initialRefreshToken = generateTestRefreshToken(user._id);
-        const hashedInitialToken = await bcrypt.hash(initialRefreshToken, 10);
+        const hashedInitialToken = hashToken(initialRefreshToken);
         await User.findByIdAndUpdate(user._id, { refreshToken: hashedInitialToken });
 
         const res = await request(app)
@@ -150,6 +154,6 @@ describe("Authentication - Refresh Token (/api/v1/auth/refreshToken)", () => {
 
         const dbUser = await User.findById(user._id);
         expect(dbUser.refreshToken).not.toBe(newRefreshToken);
-        expect(dbUser.refreshToken.startsWith("$2")).toBe(true);
+        expect(dbUser.refreshToken).toBe(hashToken(newRefreshToken));
     });
 });

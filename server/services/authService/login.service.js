@@ -1,6 +1,8 @@
+import crypto from "crypto";
 import User from "../../models/user.model.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+
 
 const Login = async (req, res) => {
     try {
@@ -62,7 +64,7 @@ const Login = async (req, res) => {
             maxAge: 15 * 60 * 1000
         })
 
-        const hashedToken = await bcrypt.hash(refreshToken, 10);
+        const hashedToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
         await User.findByIdAndUpdate(ExistingUser._id, {
             refreshToken: hashedToken
         });

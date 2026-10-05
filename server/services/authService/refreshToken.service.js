@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import User from "../../models/user.model.js";
 
@@ -24,9 +24,9 @@ const RefreshToken = async (req, res) => {
             })
         }
 
-        const isRefreshTokenValid = await bcrypt.compare(token, user.refreshToken);
+        const incomingTokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-        if (!isRefreshTokenValid) {
+        if (incomingTokenHash !== user.refreshToken) {
             return res.status(401).json({
                 message: "Unauthorized",
                 success: false
@@ -66,7 +66,7 @@ const RefreshToken = async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000
         })
 
-        const hashedToken = await bcrypt.hash(newRefreshToken, 10);
+        const hashedToken = crypto.createHash("sha256").update(newRefreshToken).digest("hex");
         await User.findByIdAndUpdate(user._id, {
             refreshToken: hashedToken
         });
