@@ -7,7 +7,7 @@ export default async function connect() {
         console.log("Database connected");
         return true;
     } catch (error) {
-        console.log(error);
+        console.log("Database connection failed: " + error);
         return false;
     }
 }
