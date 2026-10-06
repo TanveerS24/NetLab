@@ -1,8 +1,18 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { healthAPI } from "../../api/health.api.ts";
 
 const Home = () => {
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const loadData = async () => {
+            const data = await healthAPI();
+            console.log(data);
+        }
+        loadData();
+    }, []);
 
     const login = () => {
         navigate("/login")
