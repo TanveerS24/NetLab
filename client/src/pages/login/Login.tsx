@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import { useState } from "react"
+import { useState, type FormEvent } from "react"
 
 
 const Login = () => {
@@ -8,7 +8,7 @@ const Login = () => {
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         console.log(identifier, password);
         if (identifier && password) {
