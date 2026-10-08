@@ -4,17 +4,42 @@ import { useState, type FormEvent } from "react";
 const Register = () => {
     const navigate = useNavigate();
 
-    const [Username, setUserName] = useState("");
+    const [username, setUserName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const register = (e: FormEvent<HTMLFormElement>) => {
-
+    const handleRegister = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (username && email && password) {
+            navigate("/home");
+        }
     }
     return (
         <div>
-            <h1>Register</h1>
+            <form onSubmit={handleRegister}>
+                <div>
+                    <label>Username</label>
+                    <input type={"text"} value={username} placeholder="Username" onChange={(e) => setUserName(e.target.value)} required />
+                </div>
+                <div>
+                    <label>Password</label>
+                    <input type={"password"} value={password} placeholder="*****" onChange={(e) => setPassword(e.target.value)} required></input>
+                </div>
+                <div>
+                    <label>Email</label>
+                    <input type={"email"} value={email} placeholder="your email address" onChange={(e) => setEmail(e.target.value)}></input>
+                </div>
+                <div>
+                    <button type={"submit"}>
+                        Log In
+                    </button>
+                </div>
+            </form>
+            <div>
+                <button onClick={() => navigate("/login")}>Already a user? Click here</button>
+            </div>
         </div>
+
     )
 }
 
